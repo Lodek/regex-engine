@@ -23,3 +23,12 @@ genToken '(' = GroupBegin
 	 c = if c `elem` symbols then c else '!'
 
 genTree :: [Token] -> ParseTree
+
+-- |Adds explicit Concat tokens in between symbols or groups
+normalizeStream :: [Token] -> [Token]
+normalizeStream [] = []
+normalizeStream x1:[] = [x1]
+normalizeStream x1:x2:xs = case (x1, x2) of
+				(Symbol, Symbol) -> x1:Concat:x2: normalizeStream xs
+				(Symbol, GroupBegin) -> x1:Concat:x2: normalizeStream xs
+				(_, _) -> x1:x2: normalizeStream xs
