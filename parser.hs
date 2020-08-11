@@ -1,26 +1,25 @@
-type Symbol = Char 
+module Regex.Parser where
+
+data Symbol = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'  deriving (Show, Read, Eq)
+data ControlSymbol = '(' | ')' | '*' | '|' deriving (Show, Read, Eq)
+data Alphabet = Symbol | ControlSymbol deriving (Show, Read, Eq)
+
 data Operator = Concat | Alternation
 data Quantifier = Kleene
 data Token = Symbol | Quantifier | Operator | GroupBegin | GroupEnd
-data ParseTree = Node ParseTree Operator ParseTree | QuantifierNode Symbol Quantifier | Singleton Symbol
+data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf Symbol Quantifier | Leaf Symbol
 
-symbols = "abcdefghjklmnopqrstuvwxyz"
-alphabet = "()*|" ++ symbols
-
--- |Verify that all characters in the input string are part of the defined alphabet
-isInAlphabet :: String -> Boolean
-isInAlphabet = all $ map (\token -> token `elem` alphabet)
 
 genTokens :: String -> [Token]
 genTokens  = map genToken
 
-genToken :: Symbol -> Token
-genToken '(' = GroupBegin
-	 ')' = GroupEnd
-	 '|' = Alternation
-	 '*' = Kleene
-	 c = if c `elem` symbols then c else '!'
-
+genToken :: Alphabet -> Token
+genToken s@Symbol = s
+genToken c@ControlSymbol = case c of '(' -> GroupBegin
+                                     ')' -> GroupEnd
+                                     '|' -> Alternation
+                                     '*' -> Kleene
+	 
 
 -- |Adds explicit Concat tokens in between symbols or groups
 normalizeStream :: [Token] -> [Token]
