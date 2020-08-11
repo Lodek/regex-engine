@@ -1,12 +1,12 @@
-
 import Data.Either
 
 type Symbol = Char
 
-data Operator = Concat | Alternation
-data Quantifier = Kleene
-data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd
-data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol
+data Operator = Concat | Alternation deriving (Show)
+data Quantifier = Kleene deriving (Show)
+data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd deriving (Show)
+
+data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show)
 
 getOperator :: Token -> Operator
 getOperator (OpToken o) = o
@@ -18,20 +18,20 @@ getSymbol :: Token -> Symbol
 getSymbol (SToken t) = t
 
 buildQuantifiedLeaf :: Token -> Token -> ParseTree
-buildQuantifiedLeaf s q = QuantifierLeaf $ Leaf $ getSymbol s getQuantifier q
+buildQuantifiedLeaf (SToken s) (QtToken q) = QuantifierLeaf (Leaf s) q
 
-genTokens :: String -> [Token]
+genTokens :: [Symbol] -> [Token]
 genTokens  = map genToken
 
 genToken :: Symbol -> Token
 genToken c
     | c `elem` controlCharacters = controlToken c
     | c `elem` alphabet = SToken c
-    | otherwise = error "Symbol " ++ [c] ++ "is not in alphabet."
+    | otherwise = error $ "Symbol " ++ [c] ++ "is not in alphabet."
     where controlCharacters = "()|*"
           alphabet = ['a'..'z']
-          controlToken c = case c of '(' -> OpToken GroupBegin 
-                                     ')' -> OpToken GroupEnd
+          controlToken c = case c of '(' -> GroupBegin 
+                                     ')' -> GroupEnd
                                      '|' -> OpToken Alternation
                                      '*' -> QtToken Kleene
 
@@ -40,8 +40,8 @@ normalizeStream :: [Token] -> [Token]
 normalizeStream [] = []
 normalizeStream (x1:[]) = [x1]
 normalizeStream (x1:x2:xs) = case (x1, x2) of
-                                  (SToken, SToken) -> x1:(OpToken Concat):x2:normalizeStream xs
-                                  (SToken, GroupBegin) -> x1:(OpToken Concat):x2: normalizeStream xs
+                                  (SToken _, SToken _) -> x1:(OpToken Concat):x2:normalizeStream xs
+                                  (SToken _, GroupBegin) -> x1:(OpToken Concat):x2: normalizeStream xs
                                   (_, _) -> x1:x2: normalizeStream xs
 
 
@@ -50,14 +50,14 @@ normalizeStream (x1:x2:xs) = case (x1, x2) of
 -- Need to add suport for groups later on
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] = []
-sortAndTreefy ((s@SToken):(qt@QtToken):ts) = (Right $ buildQuantifiedLeaf s qt):sortAndTreefy ts
-sortAndTreefy (t:ts) = case t of OpToken -> (Left $ getOperator t):(sortAndTreefy ts)
-                                 SToken -> (Right $ Leaf t):(sortAndTreefy ts)
+sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
+sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
+                                 (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
 
 
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, rights eithers)
 
 mergeOps :: [Operator] -> [ParseTree] -> [ParseTree]
-mergeOps [] (ts@t:[]) = ts
-mergeOps (o:os) (ta:tb:ts) = mergeOps os (Node ta o tb):ts
+mergeOps [] [] = []
+mergeOps (o:os) (ta:tb:ts) = (Node ta o tb):mergeOps os ts
