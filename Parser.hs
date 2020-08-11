@@ -25,11 +25,11 @@ genToken c
 -- |Adds explicit Concat tokens in between symbols or groups
 normalizeStream :: [Token] -> [Token]
 normalizeStream [] = []
-normalizeStream x1:[] = [x1]
-normalizeStream x1:x2:xs = case (x1, x2) of
-				(Symbol, Symbol) -> x1:Concat:x2: normalizeStream xs
-				(Symbol, GroupBegin) -> x1:Concat:x2: normalizeStream xs
-				(_, _) -> x1:x2: normalizeStream xs
+normalizeStream (x1:[]) = [x1]
+normalizeStream (x1:x2:xs) = case (x1, x2) of
+                                  (Symbol, Symbol) -> x1:Concat:x2: normalizeStream xs
+                                  (Symbol, GroupBegin) -> x1:Concat:x2: normalizeStream xs
+                                  (_, _) -> x1:x2: normalizeStream xs
 
 
 
@@ -37,14 +37,14 @@ normalizeStream x1:x2:xs = case (x1, x2) of
 -- Need to add suport for groups later on
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] trees ops = []
-sortAndTreefy (symbol@Symbol):(quantifier@Quantifier):ts = (Right $ QuantifierLeaf symbol quantifier):sortAndTreefy ts
-sortAndTreefy t:ts = case t of Operator -> Left t : sortAndTreefy ts
-                               Symbol -> Right $ Leaf t : sortAndTreefy ts
+sortAndTreefy ((symbol@Symbol):(quantifier@Quantifier):ts) = (Right $ QuantifierLeaf symbol quantifier):sortAndTreefy ts
+sortAndTreefy (t:ts) = case t of Operator -> Left t : sortAndTreefy ts
+                                 Symbol -> Right $ Leaf t : sortAndTreefy ts
 
 
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, right eithers)
 
-mergeOps :: [Operator], [ParseTree] -> [ParseTree]
-mergeOps [] ts@t:[] = ts
-mergeOps o:os ta:tb:ts = mergeOps os (Node ta o tb):ts
+mergeOps :: [Operator] -> [ParseTree] -> [ParseTree]
+mergeOps [] (ts@t:[]) = ts
+mergeOps (o:os) (ta:tb:ts) = mergeOps os (Node ta o tb):ts
