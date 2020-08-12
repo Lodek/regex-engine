@@ -49,3 +49,6 @@ transformEithers eithers = (lefts eithers, rights eithers)
 mergeOps :: [Operator] -> [ParseTree] -> [ParseTree]
 mergeOps [] [] = []
 mergeOps (o:os) (ta:tb:ts) = (Node ta o tb):mergeOps os ts
+
+buildTree :: String -> ParseTree
+buildTree = head . mergeOps . transformEithers . sortAndTreefy . normalizeStream . genTokens
