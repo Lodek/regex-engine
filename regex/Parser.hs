@@ -29,8 +29,8 @@ normalizeStream :: [Token] -> [Token]
 normalizeStream [] = []
 normalizeStream (x1:[]) = [x1]
 normalizeStream (x1:x2:xs) = case (x1, x2) of
-                                  (SToken _, SToken _) -> x1:(OpToken Concat):x2:normalizeStream xs
-                                  (SToken _, GroupBegin) -> x1:(OpToken Concat):x2: normalizeStream xs
+                                  (SToken _, SToken _) -> x1:(OpToken Concat):normalizeStream (x2:xs)
+                                  (SToken _, GroupBegin) -> x1:(OpToken Concat): normalizeStream (x2:xs)
                                   (_, _) -> x1:x2: normalizeStream xs
 
 
@@ -46,9 +46,9 @@ sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, rights eithers)
 
-mergeOps :: [Operator] -> [ParseTree] -> [ParseTree]
-mergeOps [] [] = []
-mergeOps (o:os) (ta:tb:ts) = (Node ta o tb):mergeOps os ts
+mergeOps :: ([Operator], [ParseTree]) -> [ParseTree]
+mergeOps ([], []) = []
+mergeOps ((o:os), (ta:tb:ts)) = (Node ta o tb):mergeOps (os, ts)
 
 buildTree :: String -> ParseTree
 buildTree = head . mergeOps . transformEithers . sortAndTreefy . normalizeStream . genTokens
