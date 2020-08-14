@@ -44,7 +44,7 @@ uniqueQuantifierPredicate (QtToken _:QtToken _:ts) = False
 uniqueQuantifierPredicate t:ts = t && uniqueQuantifierPredicate ts
 
 validateTokens :: [Token] -> Boolean
-validateTokens ts = all [p ts | p <- predicates]
+validateTokens ts = all predicates <*> [ts] -- Applicative functors
    where predicates :: [([Token] -> Boolean)] = [evenGroupPredicate, uniqueQuantifierPredicate]
 
 
