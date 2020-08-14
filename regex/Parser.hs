@@ -33,6 +33,20 @@ normalizeStream (x1:x2:xs) = case (x1, x2) of
                                   (SToken _, GroupBegin) -> x1:(OpToken Concat): normalizeStream (x2:xs)
                                   (_, _) -> x1:x2: normalizeStream xs
 
+evenGroupPredicate :: [Token] -> Boolean
+evenGroupPredicate ts = let begins = length . filter (\t -> t == GroupBegin) ts 
+                            ends = length . filter (\t -> t == GroupEnd) ts in
+                        begins == ends
+
+uniqueQuantifierPredicate :: [Token] -> Boolean
+uniqueQuantifierPredicate [] = True
+uniqueQuantifierPredicate (QtToken _:QtToken _:ts) = False
+uniqueQuantifierPredicate t:ts = t && uniqueQuantifierPredicate ts
+
+validateTokens :: [Token] -> Boolean
+validateTokens ts = all [p ts | p <- predicates]
+   where predicates :: [([Token] -> Boolean)] = [evenGroupPredicate, uniqueQuantifierPredicate]
+
 
 -- |Classify and sort tokens into either operators (left) or trees (right).
 -- Need to add suport for groups later on
