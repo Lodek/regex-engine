@@ -1,4 +1,0 @@
-- Understanding Monads
-- Haskell Type System proposal
-- Paper on laziness from haskell video
-- Haskell programming
