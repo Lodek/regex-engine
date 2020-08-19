@@ -1,8 +1,19 @@
+# Research
+- Algebraic data types
+- lambda calculus
+
+# Watch
+- Ivory
+
+# Read
+- Understanding monads
+- Hakell type system propolas
+- Paper on laziness from ivory video
+
 # Studying
-- Start reading Haskell by graham
+- Haskell by graham
 
 # Coding
-- Write predicates to validate regex
 - Figure out HUnit
 - Write tests
 - Make tests pass
