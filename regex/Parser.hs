@@ -7,7 +7,7 @@ data Operator = Concat | Alternation deriving (Show, Eq)
 data Quantifier = Kleene deriving (Show, Eq)
 data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd deriving (Show, Eq)
 
-data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show)
+data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show, Eq)
 
 genTokens :: [Symbol] -> [Token]
 genTokens  = map genToken

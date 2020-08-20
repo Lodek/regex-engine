@@ -32,6 +32,11 @@ uniqueQuantifierPredicateData = [([SToken 'a', QtToken Kleene], True),
 
 uniqueQuantifierPredicateTest = TestList $ map (\d -> testCaseFactory "uniqueQuantifierPredicateTest" d uniqueQuantifierPredicate) uniqueQuantifierPredicateData
 
+sortAndTreefyData = [([SToken 'a', OpToken Concat, SToken 'b'],
+                          [Right $ Leaf 'a', Left Concat, Right $ Leaf 'b']),
+                     ([SToken 'a', QtToken Kleene, OpToken Concat, SToken 'b'], 
+                          [Right $ QuantifierLeaf (Leaf 'a') Kleene, Left Concat, Right $ Leaf 'b'])]
+sortAndTreefyTest = TestList $ map (\d -> testCaseFactory "sortAndTreefyTest" d sortAndTreefy) sortAndTreefyData
 
-tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest]
+tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest, sortAndTreefyTest]
 
