@@ -20,5 +20,18 @@ normalizeStreamData = [([SToken 'a', SToken 'b', OpToken Alternation, SToken 'c'
                             [SToken 'a', OpToken Concat, SToken 'b', OpToken Concat, SToken 'c'])]
 normalizeStreamTests = TestList $ map (\d -> testCaseFactory "normalizeStreamTest" d normalizeStream) normalizeStreamData
 
-tests = TestList [genTokenTests, normalizeStreamTests]
+
+evenGroupPredicateData = [([GroupBegin, SToken 'a', GroupEnd], True),
+                          ([GroupBegin, SToken 'b', GroupEnd, GroupEnd], False),
+                          ([GroupBegin, GroupBegin, SToken 'b', GroupEnd, GroupEnd], True)]
+evenGroupPredicateTest = TestList $ map (\d -> testCaseFactory "evenGroupPredicateTest" d evenGroupPredicate) evenGroupPredicateData
+
+
+uniqueQuantifierPredicateData = [([SToken 'a', QtToken Kleene], True),
+                                 ([SToken 'a', QtToken Kleene, QtToken Kleene], False)]
+
+uniqueQuantifierPredicateTest = TestList $ map (\d -> testCaseFactory "uniqueQuantifierPredicateTest" d uniqueQuantifierPredicate) uniqueQuantifierPredicateData
+
+
+tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest]
 

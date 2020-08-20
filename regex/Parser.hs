@@ -48,6 +48,11 @@ validateTokens :: [Token] -> Bool
 validateTokens ts = and ( predicates <*> pure ts) -- Applicative functors
    where predicates = [evenGroupPredicate, uniqueQuantifierPredicate]
 
+validateAndReturn :: [Token] -> [Token]
+validateAndReturn ts = let valid = validateTokens ts in
+                       case valid of
+                            True -> ts
+                            False -> error "Invalid input"
 
 -- |Classify and sort tokens into either operators (left) or trees (right).
 -- Need to add suport for groups later on
@@ -66,4 +71,4 @@ mergeOps ([], []) = []
 mergeOps ((o:os), (ta:tb:ts)) = (Node ta o tb):mergeOps (os, ts)
 
 buildTree :: String -> ParseTree
-buildTree = head . mergeOps . transformEithers . sortAndTreefy . normalizeStream . genTokens
+buildTree = head . mergeOps . transformEithers . sortAndTreefy . normalizeStream . validateAndReturn . genTokens
