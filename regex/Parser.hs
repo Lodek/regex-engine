@@ -1,10 +1,11 @@
+module Parser where 
 import Data.Either
 
 type Symbol = Char
 
-data Operator = Concat | Alternation deriving (Show)
-data Quantifier = Kleene deriving (Show)
-data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd deriving (Show)
+data Operator = Concat | Alternation deriving (Show, Eq)
+data Quantifier = Kleene deriving (Show, Eq)
+data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd deriving (Show, Eq)
 
 data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show)
 
@@ -31,21 +32,21 @@ normalizeStream (x1:[]) = [x1]
 normalizeStream (x1:x2:xs) = case (x1, x2) of
                                   (SToken _, SToken _) -> x1:(OpToken Concat):normalizeStream (x2:xs)
                                   (SToken _, GroupBegin) -> x1:(OpToken Concat): normalizeStream (x2:xs)
-                                  (_, _) -> x1:x2: normalizeStream xs
+                                  (_, _) -> x1:normalizeStream (x2:xs)
 
-evenGroupPredicate :: [Token] -> Boolean
-evenGroupPredicate ts = let begins = length . filter (\t -> t == GroupBegin) ts 
-                            ends = length . filter (\t -> t == GroupEnd) ts in
-                        begins == ends
+evenGroupPredicate :: [Token] -> Bool
+evenGroupPredicate ts = let begins = length . filter (\t -> t == GroupBegin) 
+                            ends = length . filter (\t -> t == GroupEnd) in
+                        begins ts == ends ts
 
-uniqueQuantifierPredicate :: [Token] -> Boolean
+uniqueQuantifierPredicate :: [Token] -> Bool
 uniqueQuantifierPredicate [] = True
-uniqueQuantifierPredicate (QtToken _:QtToken _:ts) = False
-uniqueQuantifierPredicate t:ts = t && uniqueQuantifierPredicate ts
+uniqueQuantifierPredicate ((QtToken _):(QtToken _):ts) = False
+uniqueQuantifierPredicate (t:ts) = True && uniqueQuantifierPredicate ts
 
-validateTokens :: [Token] -> Boolean
-validateTokens ts = all predicates <*> [ts] -- Applicative functors
-   where predicates :: [([Token] -> Boolean)] = [evenGroupPredicate, uniqueQuantifierPredicate]
+validateTokens :: [Token] -> Bool
+validateTokens ts = and ( predicates <*> pure ts) -- Applicative functors
+   where predicates = [evenGroupPredicate, uniqueQuantifierPredicate]
 
 
 -- |Classify and sort tokens into either operators (left) or trees (right).

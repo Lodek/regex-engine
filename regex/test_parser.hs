@@ -1,30 +1,24 @@
 import Test.HUnit
 import Parser
 
-testGenToken = let input = "abc"
-                   expected = [SToken 'a', SToken 'b', SToken 'c']
-    in TestCase (assertEqual "" expected genTokens input)
+testCaseFactory :: (Eq a, Eq b, Show b) => String -> (a, b) -> (a -> b) -> Test
+testCaseFactory label (a, b) f = TestLabel label $ TestCase $ assertEqual "" b $ f a 
 
-testGenToken1 = let input = "ab*"
-                   expected = [SToken 'a', SToken 'b', QtToken Kleene]
-    in TestCase (assertEqual "" expected genTokens input)
+genTokenData = [("abc", [SToken 'a', SToken 'b', SToken 'c']),
+                ("ab*", [SToken 'a', SToken 'b', QtToken Kleene]),
+                ("ab|c", [SToken 'a', SToken 'b', OpToken Alternation, SToken 'c'])]
 
-testGenToken2 = let input = "ab|c"
-                   expected = [SToken 'a', SToken 'b', OpToken Alternation, SToken 'c']
-    in TestCase (assertEqual "" expected genTokens input)
+genTokenTests = TestList $ map (\d -> testCaseFactory "genTokenTest" d genTokens) genTokenData
 
-testNormalizeStream1 = let input = [SToken 'a', SToken 'b', OpToken Alternation, SToken 'c']
-                          expected = [SToken 'a', OpToken Concat, SToken 'b', OpToken Alternation, SToken 'c']
-    in TestCase (assertEqual "" expected normalizeStream input)
+normalizeStreamData = [([SToken 'a', SToken 'b', OpToken Alternation, SToken 'c'],
+                            [SToken 'a', OpToken Concat, SToken 'b', OpToken Alternation, SToken 'c']),
+                       ([SToken 'a', SToken 'b', QtToken Kleene],
+                            [SToken 'a', OpToken Concat, SToken 'b', QtToken Kleene]),
+                       ([GroupBegin, SToken 'a', SToken 'b', GroupEnd, QtToken Kleene],
+                            [GroupBegin, SToken 'a', OpToken Concat, SToken 'b', GroupEnd, QtToken Kleene]),
+                       ([SToken 'a', SToken 'b', SToken 'c'],
+                            [SToken 'a', OpToken Concat, SToken 'b', OpToken Concat, SToken 'c'])]
+normalizeStreamTests = TestList $ map (\d -> testCaseFactory "normalizeStreamTest" d normalizeStream) normalizeStreamData
 
-testNormalizeStream2 = let input = [SToken 'a', SToken 'b', OpToken Kleene]
-                          expected = [SToken 'a', OpToken Concat, SToken 'b', OpToken Kleene]
-    in TestCase (assertEqual "" expected normalizeStream input)
+tests = TestList [genTokenTests, normalizeStreamTests]
 
-testNormalizeStream2 = let input = [GroupBegin, SToken 'a', SToken 'b', GroupEnd, OpToken Kleene]
-                          expected = [GroupBegin, SToken 'a', OpToken Concat, SToken 'b', GroupEnd, OpToken Kleene]
-    in TestCase (assertEqual "" expected normalizeStream input)
-
-testNormalizeStream3 = let input = [SToken 'a', SToken 'b', SToken 'c']
-                          expected = [SToken 'a', OpToken Concat, SToken 'b', OpToken Concat, SToken 'c']
-    in TestCase (assertEqual "" expected normalizeStream input)
