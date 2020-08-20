@@ -66,9 +66,8 @@ sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, rights eithers)
 
-mergeOps :: ([Operator], [ParseTree]) -> [ParseTree]
-mergeOps ([], []) = []
-mergeOps ((o:os), (ta:tb:ts)) = (Node ta o tb):mergeOps (os, ts)
+mergeOps :: [Operator] -> [ParseTree] -> [ParseTree]
+mergeOps os ts = foldl (\(ta:tb:ts) op -> (Node ta op tb):ts) ts os
 
 buildTree :: String -> ParseTree
-buildTree = head . mergeOps . transformEithers . sortAndTreefy . normalizeStream . validateAndReturn . genTokens
+buildTree = head . uncurry mergeOps . transformEithers . sortAndTreefy . normalizeStream . validateAndReturn . genTokens

@@ -39,4 +39,3 @@ sortAndTreefyData = [([SToken 'a', OpToken Concat, SToken 'b'],
 sortAndTreefyTest = TestList $ map (\d -> testCaseFactory "sortAndTreefyTest" d sortAndTreefy) sortAndTreefyData
 
 tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest, sortAndTreefyTest]
-
