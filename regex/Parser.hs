@@ -44,6 +44,23 @@ uniqueQuantifierPredicate [] = True
 uniqueQuantifierPredicate ((QtToken _):(QtToken _):ts) = False
 uniqueQuantifierPredicate (t:ts) = True && uniqueQuantifierPredicate ts
 
+-- |Extract subgroup from list of tokens. Return pair with group and rest, respectively
+-- |Input is dropped until there's a GroupBegin token
+extractGroup :: [Token] -> ([Token], [Token])
+extractGroup ts = let xs = dropWhile (/=GroupBegin) ts 
+                      group = takeWhileGroupUneven xs in
+                  case drop (length group) xs of
+                       (qt@(QtToken _):ys) -> (group ++ [qt], ys)
+                       ys -> (group, ys)
+
+takeWhileGroupUneven :: [Token] -> [Token]
+takeWhileGroupUneven (x:xs) = takeWhileList (not .  evenGroupPredicate) [x] xs 
+
+takeWhileList :: ([Token] -> Bool) -> [Token] -> [Token] -> [Token]
+takeWhileList p as (b:bs)
+    | p as = takeWhileList p (as++[b]) bs
+    | otherwise = as
+
 validateTokens :: [Token] -> Bool
 validateTokens ts = and ( predicates <*> pure ts) -- Applicative functors
    where predicates = [evenGroupPredicate, uniqueQuantifierPredicate]
