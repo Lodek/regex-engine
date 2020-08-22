@@ -50,10 +50,11 @@ uniqueQuantifierPredicate (t:ts) = True && uniqueQuantifierPredicate ts
 -- |Input is dropped until there's a GroupBegin token
 yankSubExp :: [Token] -> (SubExpression, [Token])
 yankSubExp ts = let xs = dropWhile (/=GroupBegin) ts 
-                    group = takeWhileGroupUneven xs in
+                    group = takeWhileGroupUneven xs
+                    tokens = init $ tail group in
                   case drop (length group) xs of
-                       ((QtToken qt):ys) -> (QuantifiedSubExp group qt, ys)
-                       ys -> (SubExp group, ys)
+                       ((QtToken qt):ys) -> (QuantifiedSubExp tokens qt, ys)
+                       ys -> (SubExp tokens, ys)
 
 takeWhileGroupUneven :: [Token] -> [Token]
 takeWhileGroupUneven (x:xs) = takeWhileList (not .  evenGroupPredicate) [x] xs 
@@ -78,13 +79,15 @@ validateAndReturn ts = let valid = validateTokens ts in
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] = []
 sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
---sortAndTreefy (GroupEnd:(QtToken q):ts) = QuantifierLeaf 
+sortAndTreefy ts'@(GroupBegin:ts) = let (sub, tokens) = yankSubExp ts' in
+                                        (Right $ buildSubExp sub):(sortAndTreefy tokens)
 sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
                                  (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
                                  (GroupEnd) -> []
 
---buildSubExp :: [Token] -> ParseTree
---buildSubExp ts = uncurry mergeOps . transformEithers . sortAndTreefy ts
+buildSubExp :: SubExpression -> ParseTree
+buildSubExp (SubExp ts) = (head . uncurry mergeOps . transformEithers . sortAndTreefy) ts
+buildSubExp (QuantifiedSubExp ts qt) = QuantifierLeaf (buildSubExp $ SubExp ts) qt
 
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, rights eithers)

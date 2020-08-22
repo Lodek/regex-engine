@@ -39,13 +39,13 @@ sortAndTreefyData = [([SToken 'a', OpToken Concat, SToken 'b'],
 sortAndTreefyTest = TestList $ map (\d -> testCaseFactory "sortAndTreefyTest" d sortAndTreefy) sortAndTreefyData
 
 yankSubExpData = [([GroupBegin, SToken 'a', GroupEnd, SToken 'b'], 
-                         (SubExp [GroupBegin, SToken 'a', GroupEnd], [SToken 'b'])),
+                         (SubExp [SToken 'a'], [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupEnd, QtToken Kleene, SToken 'b'], 
-                         (QuantifiedSubExp [GroupBegin, SToken 'a', GroupEnd] Kleene, [SToken 'b'])),
+                         (QuantifiedSubExp [SToken 'a'] Kleene, [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd, SToken 'b'], 
-                         (SubExp [GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd], [SToken 'b'])),
+                         (SubExp [SToken 'a', GroupBegin, SToken 'c', GroupEnd], [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd, QtToken Kleene, SToken 'b'], 
-                         (QuantifiedSubExp [GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd] Kleene, [SToken 'b']))]
+                         (QuantifiedSubExp [SToken 'a', GroupBegin, SToken 'c', GroupEnd] Kleene, [SToken 'b']))]
 
 
 yankSubExpTest = TestList $ map (\d -> testCaseFactory "yankSubExpTest" d yankSubExp) yankSubExpData
