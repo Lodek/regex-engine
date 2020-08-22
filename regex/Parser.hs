@@ -7,6 +7,8 @@ data Operator = Concat | Alternation deriving (Show, Eq)
 data Quantifier = Kleene deriving (Show, Eq)
 data Token = SToken Symbol | QtToken Quantifier | OpToken Operator | GroupBegin | GroupEnd deriving (Show, Eq)
 
+data SubExpression = SubExp [Token] | QuantifiedSubExp [Token] Quantifier deriving (Show, Eq)
+
 data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show, Eq)
 
 genTokens :: [Symbol] -> [Token]
@@ -44,14 +46,14 @@ uniqueQuantifierPredicate [] = True
 uniqueQuantifierPredicate ((QtToken _):(QtToken _):ts) = False
 uniqueQuantifierPredicate (t:ts) = True && uniqueQuantifierPredicate ts
 
--- |Extract subgroup from list of tokens. Return pair with group and rest, respectively
+-- |Extract sub-expression from list of tokens. Return pair with group and rest, respectively
 -- |Input is dropped until there's a GroupBegin token
-extractGroup :: [Token] -> ([Token], [Token])
-extractGroup ts = let xs = dropWhile (/=GroupBegin) ts 
-                      group = takeWhileGroupUneven xs in
+yankSubExp :: [Token] -> (SubExpression, [Token])
+yankSubExp ts = let xs = dropWhile (/=GroupBegin) ts 
+                    group = takeWhileGroupUneven xs in
                   case drop (length group) xs of
-                       (qt@(QtToken _):ys) -> (group ++ [qt], ys)
-                       ys -> (group, ys)
+                       ((QtToken qt):ys) -> (QuantifiedSubExp group qt, ys)
+                       ys -> (SubExp group, ys)
 
 takeWhileGroupUneven :: [Token] -> [Token]
 takeWhileGroupUneven (x:xs) = takeWhileList (not .  evenGroupPredicate) [x] xs 
@@ -76,9 +78,13 @@ validateAndReturn ts = let valid = validateTokens ts in
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] = []
 sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
+--sortAndTreefy (GroupEnd:(QtToken q):ts) = QuantifierLeaf 
 sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
                                  (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
+                                 (GroupEnd) -> []
 
+--buildSubExp :: [Token] -> ParseTree
+--buildSubExp ts = uncurry mergeOps . transformEithers . sortAndTreefy ts
 
 transformEithers :: [Either Operator ParseTree] -> ([Operator], [ParseTree])
 transformEithers eithers = (lefts eithers, rights eithers)

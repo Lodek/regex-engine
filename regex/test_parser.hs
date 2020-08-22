@@ -38,17 +38,17 @@ sortAndTreefyData = [([SToken 'a', OpToken Concat, SToken 'b'],
                           [Right $ QuantifierLeaf (Leaf 'a') Kleene, Left Concat, Right $ Leaf 'b'])]
 sortAndTreefyTest = TestList $ map (\d -> testCaseFactory "sortAndTreefyTest" d sortAndTreefy) sortAndTreefyData
 
-extractGroupData = [([GroupBegin, SToken 'a', GroupEnd, SToken 'b'], 
-                         ([GroupBegin, SToken 'a', GroupEnd], [SToken 'b'])),
+yankSubExpData = [([GroupBegin, SToken 'a', GroupEnd, SToken 'b'], 
+                         (SubExp [GroupBegin, SToken 'a', GroupEnd], [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupEnd, QtToken Kleene, SToken 'b'], 
-                         ([GroupBegin, SToken 'a', GroupEnd, QtToken Kleene], [SToken 'b'])),
+                         (QuantifiedSubExp [GroupBegin, SToken 'a', GroupEnd] Kleene, [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd, SToken 'b'], 
-                         ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd], [SToken 'b'])),
+                         (SubExp [GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd], [SToken 'b'])),
                     ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd, QtToken Kleene, SToken 'b'], 
-                         ([GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd, QtToken Kleene], [SToken 'b']))]
+                         (QuantifiedSubExp [GroupBegin, SToken 'a', GroupBegin, SToken 'c', GroupEnd, GroupEnd] Kleene, [SToken 'b']))]
 
 
-extractGroupTest = TestList $ map (\d -> testCaseFactory "extractGroupTest" d extractGroup) extractGroupData
+yankSubExpTest = TestList $ map (\d -> testCaseFactory "yankSubExpTest" d yankSubExp) yankSubExpData
 
 
-tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest, sortAndTreefyTest, extractGroupTest]
+tests = TestList [genTokenTests, normalizeStreamTests, evenGroupPredicateTest, uniqueQuantifierPredicateTest, sortAndTreefyTest, yankSubExpTest]
