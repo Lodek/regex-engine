@@ -57,9 +57,11 @@ yankSubExp ts = let xs = dropWhile (/=GroupBegin) ts
                        ys -> (SubExp tokens, ys)
 
 takeWhileGroupUneven :: [Token] -> [Token]
+takeWhileGroupUneven [] = []
 takeWhileGroupUneven (x:xs) = takeWhileList (not .  evenGroupPredicate) [x] xs 
 
 takeWhileList :: ([Token] -> Bool) -> [Token] -> [Token] -> [Token]
+takeWhileList p as [] = as
 takeWhileList p as (b:bs)
     | p as = takeWhileList p (as++[b]) bs
     | otherwise = as
