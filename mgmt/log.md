@@ -5,3 +5,9 @@
 - Started graham's book
 # 2020-08-18
 - Read why functional programming matters
+# 2020-08-23
+- wrote about parser
+# 2020-08-24
+- started chicago style guide
+# 2020-08-25
+- parser writing
