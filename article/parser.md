@@ -155,8 +155,6 @@ Note que, como em muitos casos, a funcão `sortAndTreefy` foi definiada de manei
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] = []
 sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
-sortAndTreefy ts'@(GroupBegin:ts) = let (sub, tokens) = yankSubExp ts' in
-                                        (Right $ buildSubExp sub):(sortAndTreefy tokens)
 sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
                                  (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
                                  (GroupEnd) -> []
@@ -169,9 +167,61 @@ A maior complexidade desse processo é identificar o significado de diferentes c
 Novamente, a programacão funcional é capaz de abstrair varios pequenos detalhes de como a computacão será exectuada, se estivermos dispostos a aceitar a mudança de paradigma.
 Tendo definido o processo de conversão para um *regex* sem agrupamento, podemos usar o que foi criado para lidar com subgrupos.
 
-## Subgrupos
+## Subexpressão
+Na secão anterior, foi introduzido como transformar uma regex sem sub-expressões, em uma árvore, essa secão expande o algoritimo anterior para aceitar sub-expressões.
+
+Uma sub-expressão é literalmente uma regex em uma regex.
+Uma regex pode ter uma sub-expressão, que por sua vez pode ter uma sub-expressão e etc.
+Note a natureza recursiva de sub-expressões, isso indica que pode ser feito o uso de recursão para construir as sub-árvores e felizmente, linguagens funcionais são ótimas com recursão.
+
+Como em toda recursão, é necessário um *base case* para que ela não seja infinita.
+No caso de sub-expressões, o base case seria quando ela fosse uma regex simples, sem grupos.
+Visto que, em algum ponto da recursão, teremos uma regex simples, a mesma pode ser convertida para uma arvore, que por sua vez pode ser unida a outra árvore usando os operadores definidos.
+Sendo assim, pode-se concluir que, uma sub-expressão é equivalente a uma árvore, e no caso de sub-expressões recursivas, no final de tudo, é possível gerar uma única árvore que seja equivalente a ela.
+
+Para adicionar a funcionalidade de sub-expressões ao código, basta notar que a construcão de uma sub-expressão é equivalente a construcão de uma expressão comum, visto que ambos retornam uma única arvore.
+Sendo assim, grande parte do código ja escrito será reutilizado, sendo necessário uma funcão para extrair identificar e extrair uma subexpressão da lista de tokens.
+Como uma sub-expressão é delimitada pelos tokens de `GroupBegin` e `GroupEnd`, a funcão de extracão deve retornar todos os tokens entre os tokens de agrupamento.
+Para isso, foi escrito a funcão `yankSubExp`, que retorna um valor do tipo `SubExpression` com os tokens que fazem parte daquele grupo.
+Essa funcão itera sobre a lista de tokens, iniciando no token de `GroupBegin`, e adiciona tokens a lista de retorno até que exista um numero igual de tokens do tipo `GroupBegin` e `GroupEnd`.
+Essa condicão garante que subgrupos sejam retornados também. 
+
+Com essa funcão extra, podemos expandir a funcão `sortAndTreefy` para que, quando a mesma encontre um token de `GroupBegin`, todos os tokens referentes a aquele grupo sejam extraídos, usando esses tokens seja gerada uma nova árvore e essa árvore seja adicionada a lista de retorno.
+Essa implementacão, por ser recursiva, funciona para subsub-expressões também, visto que a subsub-expressão será identificada no processo de construcão da árvore da sub-expressão, e o processo irá se repetir.
+O trecho de código abaixo contém a funcão `sortAndTreefy` modificada para aceitar grupos.
+Note que foram adicionas apenas 2 linhas à funcão original, a equacão referente ao caso do token ser um token de agrupamento.
 
 
+```haskell
+sortAndTreefy :: [Token] -> [Either Operator ParseTree]
+sortAndTreefy [] = []
+sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
+sortAndTreefy ts'@(GroupBegin:ts) = let (sub, tokens) = yankSubExp ts' in
+                                        (Right $ buildSubExp sub):(sortAndTreefy tokens)
+sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
+                                 (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
+                                 (GroupEnd) -> []
+```
+
+A funcão `sortAndTreefy` chama uma funcão `buildSubExp` que é nova, porem essa funcão nada mais é do que um atalho para chamar as funcões definidas anteriormente.
+O trecho abaixo contém a definicão dela.
+
+```haskell
+buildSubExp :: SubExpression -> ParseTree
+buildSubExp (SubExp ts) = (head . uncurry mergeOps . transformEithers . sortAndTreefy) ts
+buildSubExp (QuantifiedSubExp ts qt) = QuantifierLeaf (buildSubExp $ SubExp ts) qt
+```
+
+Sendo assim, o módulo de parse está completo.
 
 ## Conclusao
+O módulo de parse tranforma um string em uma árvore.
+Para a construcão do módulo de parse primeiramente foi definido os tipos de dados que seriam usados por ele.
+A definicão dos tipos de dados foi feito de maneira enxuta e clara, devido a natureza dos tipos de dados álgebricos que existe em Haskell.
+A partir dos tipos, foram definidas funcões que realizam um conjunto de transformacões sobre o valor de entrada, um string, até gerar o valor de saída, uma árvore.
+Em muitas dessas funcões foi feito uso de recursão, um padrão muito comum na programacão funcional.
+Devido a natureza das linguagem funcionais, cada funcão realizava uma unica tarefa, e sendo assim, contém poucas linhas de código.
+O resultado final do módulo é uma única funcão que faz uso do operador de composicão para transformar um string em uma árvore.
 
+Nos exemplos contidos nesse texto, é notavél o uso de *pattern matching* como ferramenta fundamental do desenvolvimento, essa ferramenta permite o programador pensar sobre a estrutura do dado, ao invez dos passos que precisam ser feitos.
+Isso é somente um exemplo de como a programacão funcional pode ser mais expressiva, possibilitando o programador a pensar de maneira mais abstrata e concisa.
