@@ -133,9 +133,45 @@ A normalizacão torna esses operadores explicitos, pois eles são usados na cons
 Finalmente, a lista de tokens está pronta para ser convertida em um árvore.
 
 ## Conversão para árvore
+Com os pré-processamentos feitos, a regex em forma de string foi convertida para uma lista de tokens, normalizada e validada.
+O passo anterior é importante pois o algoritimo que converte a lista de tokens em uma árvore não implementa programacão preventiva, ele assume que os tokens estão bem estruturados e que condicões anormais tenham sido identificadas em etapas anteriores, caso contrário, existe a possibilidade do programar gerar um erro em tempo de execucão.
+Essa secão irá abordar o tópico de transformar uma lista de tokens em uma árvore.
+A fim de simplificar a explicacão, primeiramente será explicado como o algoritimo transforma uma expressão regular sem grupos em uma árvore e na próxima secão será adicionado suporte aos sub-grupos.
 
+A transformacão de lista para árvore aconteçe em algumas etapas
+1. A funcão `sortAndTreefy` itera sobre a lista de tokens. Se o token é um token de operacão, o mesmo é adicionado a lista de retorno; se o token é um token de símbolo, a funcão cria uma folha para aquele símbolo e a adiciona a lista de retorna; se o token é um token de quantificacão, a funcão cria uma folha quantificada.
+2. A funcão `transformEithers` separa a lista de operadores e árvores em um par com uma lista de operadores e outra lista de árvores.
+3. A funcão `mergeOps` une as árvores unitárias (folhas), usando os operadores da lista de operadores. A funcão recursivamente: pega as duas primeiros árvores da lista de árvores, o primeiro operador da lista de operador; cria um nó usando o construtor definido no tipo `ParseTree` com as árvores e o operador; continua a recursão usando o nó criado como sendo o primeiro elemento da lista de árvores. Esse processo de repete até que todos os operadores tenham sido utilizados. O retorno dessa funcão é uma lista unitária de árvores.
+4. Finalmente, a árvore é removida da lista unitária e retornada.
+
+A funcão mais interessante dessa pipeline é a funcão `sortAndTreefy`, o trecho de código abaixo contém a definicão da mesma.
+Essa funcão não é particularmente complexa, ela faz uso de *pattern matching* para identificar a estrutura dos primeiros elementos da lista de tokens para decidir o que fazer.
+Essa funcão é um exemplo interessante da diferença de pensamento entre programação imperativa e funcional.
+Na programacão imperativa, pensa-se nos passos que serão executados para resolver o problema; na programacão funcional, pensa-se na estrutura e forma dos argumentos de entrada, a programacão funcional permite um pensamento mais alto nível sobre o problema. **(review this)**
+Sendo assim, para implementar essa funcão, foi analizado os diferentes padrões que pudessem existir na lista de tokens, e a partir disso, foi definido qual acão a funcão deve executar para cada caso.
+Note que, como em muitos casos, a funcão `sortAndTreefy` foi definiada de maneira recurssiva, visto que não é possível mutar os dados e que não existe for loops.
+
+```
+sortAndTreefy :: [Token] -> [Either Operator ParseTree]
+sortAndTreefy [] = []
+sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
+sortAndTreefy ts'@(GroupBegin:ts) = let (sub, tokens) = yankSubExp ts' in
+                                        (Right $ buildSubExp sub):(sortAndTreefy tokens)
+sortAndTreefy (t:ts) = case t of (OpToken t) -> (Left t):(sortAndTreefy ts)
+                                 (SToken t) -> (Right $ Leaf t):(sortAndTreefy ts)
+                                 (GroupEnd) -> []
+```
+
+*Implement sortAndTreefy in Java or Python*
+
+A etapa de transformar uma lista de tokens em uma árvore, embora tenha sido mais complexa que as etapas anteriores, ainda possui uma complexidade bem razoavel.
+A maior complexidade desse processo é identificar o significado de diferentes combinacões de tokens e definir uma acão apropriada para cada caso.
+Novamente, a programacão funcional é capaz de abstrair varios pequenos detalhes de como a computacão será exectuada, se estivermos dispostos a aceitar a mudança de paradigma.
+Tendo definido o processo de conversão para um *regex* sem agrupamento, podemos usar o que foi criado para lidar com subgrupos.
 
 ## Subgrupos
+
+
 
 ## Conclusao
 
