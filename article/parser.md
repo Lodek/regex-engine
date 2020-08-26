@@ -45,7 +45,7 @@ Foi definido que uma árvore pode ter 3 formatos: uma folha que armazena um sím
 O trecho de código abaixo contém a definição da árvore, note que os 3 casos mencionados estão descritos e note também que a definição de `ParseTree` faz uso de `ParseTree`, ou seja, o tipo é definido de maneira recursiva.
 O tipo `ParseTree` não faz uso do tipo `Token`, mas sim, dos subtipos `Operator`, `Symbol` e `Quantifier`, isso permite especificar com exatidão o tipo de token.
 
-```
+```haskell
 data ParseTree = Node ParseTree Operator ParseTree | QuantifierLeaf ParseTree Quantifier | Leaf Symbol deriving (Show, Eq)
 ```
 
@@ -63,7 +63,7 @@ Para facilitar a implementação do código, foi definido um tipo `SubExpression
 Os dois construtores definidos armazenam uma lista de `Token` e o construtor quantificado armazena o operador de quantificação.
 O trecho de código abaixo define o tipo de dado `SubExpression`.
 
-```
+```haskell
 data SubExpression = SubExp [Token] | QuantifiedSubExp [Token] Quantifier deriving (Show, Eq)
 ```
 
@@ -89,7 +89,7 @@ Primeiro, o caractere é testado, se o caractere for um caractere de controle, o
 Caso o teste anterior falhe, verifica-se se o caractere é um simbolo, caso sim é retornado um token de simbolo.
 Por ultimo, caso ambos os testes falhem, é retornado um erro.
 
-```
+```haskell
 genToken :: Symbol -> Token
 genToken c
     | c `elem` controlCharacters = controlToken c
@@ -110,7 +110,7 @@ Foram definidos dois predicados, um que valida que os grupos na regex estão bal
 A implementacão desses predicados não é de muito interesse, porém a funcão que aplica os predicados é.
 O trecho a seguir implementa a funcão de validacão.
 
-```
+```haskell
 validateTokens :: [Token] -> Bool
 validateTokens ts = and ( predicates <*> pure ts) -- Applicative functors
    where predicates = [evenGroupPredicate, uniqueQuantifierPredicate]
@@ -151,7 +151,7 @@ Na programacão imperativa, pensa-se nos passos que serão executados para resol
 Sendo assim, para implementar essa funcão, foi analizado os diferentes padrões que pudessem existir na lista de tokens, e a partir disso, foi definido qual acão a funcão deve executar para cada caso.
 Note que, como em muitos casos, a funcão `sortAndTreefy` foi definiada de maneira recurssiva, visto que não é possível mutar os dados e que não existe for loops.
 
-```
+```haskell
 sortAndTreefy :: [Token] -> [Either Operator ParseTree]
 sortAndTreefy [] = []
 sortAndTreefy ((SToken s):(QtToken q):ts) = (Right $ QuantifierLeaf (Leaf s) q):sortAndTreefy ts
