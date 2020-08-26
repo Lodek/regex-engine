@@ -1,4 +1,4 @@
-#Introdução
+# Introdução
 Uma expressão regular é informada ao computador através de uma sequencia de caracteres, um String, que deve ser convertido para uma automata, o módulo de parse é responsável pelo primeiro passo dessa conversão.
 Esse módulo recebe uma regex em forma de string e a converte para uma representação intermediaria, uma árvore.
 
