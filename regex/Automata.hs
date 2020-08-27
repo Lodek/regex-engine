@@ -17,7 +17,23 @@ buildEpsilonAlphabet :: [t] -> Set AlphabetSymbol t
 buildEpsilonAlphabet ts = Set.fromList $ Epsilon:(map Symbol ts)
 
 
---stateEpsilonClosure :: Delta s t -> s -> [s]
---setEpsilonClosure :: Delta s t -> [s] -> [s]
---move :: Delta s t -> [s] -> [s]
+-- |Return list of states reachable from given states with epsilon transitions alone
+epsilonClosure :: Delta s t -> [s] -> [s]
+epsilonClosure delta [] = []
+epsilonClosure delta ss = let ss' = concat $ map (\s -> delta s Epsilon) ss in
+                              ss' ++ epsilonClosure ss'
+
+
+stateEpsilonClosure :: Delta s t -> s -> [s]
+stateEpsilonClosure delta s = epsilonClosure delta [s]
+
+
+move :: Delta s t -> s -> AlphabetSymbol t -> [s]
+move delta st sy = let ss = delta st sy in
+                       ss:(epsilonClosure delta ss)
+
+
+moveStates :: Delta s t -> [s] -> AlphabetSymbol t -> [s]
+moveStates delta ss sy = concat $ map (\s -> move delta s sy) ss
+
 --execNFA :: Automata t s -> [t] -> Bool
