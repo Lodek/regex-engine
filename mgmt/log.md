@@ -11,3 +11,8 @@
 - started chicago style guide
 # 2020-08-25
 - parser writing
+# 2020-08-27
+- started automata module
+- implemented some core functions
+- read about adhoc polymorphism
+- read graaham

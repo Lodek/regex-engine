@@ -6,11 +6,12 @@
 - Ivory
 
 # Read
-- Understanding monads
 - Hakell type system propolas
+- Understanding monads
 - Paper on laziness from ivory video
 
 # Studying
 - Haskell by graham
 
 # Coding
+- Specify functions for Automata module
