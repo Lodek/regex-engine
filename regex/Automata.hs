@@ -3,7 +3,7 @@ module Automata where
 import qualified Data.Set as Set
 import Data.Either
 
-data SigmaElem s = Symbol s | Epsilon deriving (Show, Eq)
+data SigmaElem s = Symbol s | Epsilon deriving (Show, Eq, Ord)
 
 type Sigma s = Set.Set (SigmaElem s)
 
@@ -15,6 +15,7 @@ data Automata q s = NFA { alphabet :: Set.Set (SigmaElem s),
                           qa :: Set.Set q,
                           delta :: Delta q s
                         } 
+
 
 
 -- |Wrap foldable of symbols as a list of SigmaElems, adding epsilon
