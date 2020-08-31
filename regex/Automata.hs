@@ -31,18 +31,27 @@ buildSigma ts = Set.insert Epsilon symbols
     where empty = Set.empty :: Set.Set (SigmaElem a)
           symbols = foldl (\acc s -> Set.insert (Symbol s) acc) empty ts
 
--- |If state is in return true if state is accepting else false
---isAccepting :: [q] -> q -> Bool
---isAccepting qs q = q elem qs
-
+-- | Unites the two sets specified as argument, apply function to first - second
+-- | return pair with union and result of function application over the difference.
+unionAndApplyOverDiff :: (Ord a) => (Set.Set a -> Set.Set a) -> Set.Set a -> Set.Set a -> (Set.Set a,  Set.Set a)
+unionAndApplyOverDiff f a b = (Set.union a b, f (Set.difference a b))
 
 
 -- |Return list of states reachable from given states with epsilon transitions alone
---epsilonClosure :: Delta s t -> [s] -> [s]
---epsilonClosure delta [] = []
---epsilonClosure delta ss = let ss' = concat $ map (\s -> delta s Epsilon) ss in
-                              --ss' ++ epsilonClosure delta ss'
+-- epsilonClosure :: Delta s t -> Set.Set s -> Set.Set s -> (Set.Set s, Set.Set s)
+-- epsilonClosure delta states visited
+    -- | Set.null states = visited
+    -- | otherwise = uncurry (epsilonClosure delta) $ unionAndApplyOverDiff delta visited states
 
+--operations with set that i've had to do
+--build set from result of applying function over foldable
+--iterate over set
+
+
+
+-- |If state is in return true if state is accepting else false
+--isAccepting :: [q] -> q -> Bool
+--isAccepting qs q = q elem qs
 
 --stateEpsilonClosure :: Delta s t -> s -> [s]
 --stateEpsilonClosure delta s = epsilonClosure delta [s]
