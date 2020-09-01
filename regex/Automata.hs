@@ -2,6 +2,7 @@ module Automata where
 
 import qualified Data.Set as Set
 import Data.Either
+import Data.Tuple
 
 data SigmaElem s = Symbol s | Epsilon deriving (Show, Eq)
 
@@ -15,7 +16,7 @@ instance (Ord s) => Ord (SigmaElem s) where --unecessary, just for learning
 
 type Sigma s = Set.Set (SigmaElem s)
 
-type Delta q s = (q -> SigmaElem s -> [q])
+type Delta q s = (q -> SigmaElem s -> Set.Set q)
 
 data Automata q s = NFA { alphabet :: Set.Set (SigmaElem s),
                           states :: Set.Set q,
@@ -36,12 +37,17 @@ buildSigma ts = Set.insert Epsilon symbols
 unionAndApplyOverDiff :: (Ord a) => (Set.Set a -> Set.Set a) -> Set.Set a -> Set.Set a -> (Set.Set a,  Set.Set a)
 unionAndApplyOverDiff f a b = (Set.union a b, f (Set.difference a b))
 
+-- | Apply delta over Set of states for a symbol, return the union of all reachable states
+deltaOverSet :: (Ord q) => Delta q s -> SigmaElem s -> Set.Set q -> Set.Set q
+deltaOverSet delta s qs = foldl (\acc q -> Set.union (delta q s) acc) Set.empty qs
+
 
 -- |Return list of states reachable from given states with epsilon transitions alone
--- epsilonClosure :: Delta s t -> Set.Set s -> Set.Set s -> (Set.Set s, Set.Set s)
--- epsilonClosure delta states visited
-    -- | Set.null states = visited
-    -- | otherwise = uncurry (epsilonClosure delta) $ unionAndApplyOverDiff delta visited states
+epsilonClosure :: (Ord q) => Delta q s -> Set.Set q -> Set.Set q -> (Set.Set q, Set.Set q)
+epsilonClosure delta states visited
+     | Set.null states = (states, visited)
+     | otherwise = uncurry (epsilonClosure delta) $ swap $ unionAndApplyOverDiff delta' states visited
+     where delta' = deltaOverSet delta Epsilon
 
 --operations with set that i've had to do
 --build set from result of applying function over foldable
