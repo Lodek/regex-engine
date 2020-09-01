@@ -18,12 +18,12 @@ type Sigma s = Set.Set (SigmaElem s)
 
 type Delta q s = (q -> SigmaElem s -> Set.Set q)
 
-data Automata q s = NFA { alphabet :: Set.Set (SigmaElem s),
-                          states :: Set.Set q,
-                          q0 :: q,
-                          qa :: Set.Set q,
-                          delta :: Delta q s
-                        } 
+--data Automata q s = NFA { alphabet :: Set.Set (SigmaElem s),
+                          --states :: Set.Set q,
+                          --q0 :: q,
+                          --qas :: Set.Set q,
+                          --delta :: Delta q s
+                        --} 
 
 
 -- |Wrap foldable of symbols as a list of SigmaElems, adding epsilon
@@ -70,9 +70,13 @@ moveStates delta qs s = foldl (\acc s -> Set.union s acc) Set.empty states
 
 
 -- |Validate elements of stream are in Sigma, return either with error message or stream
---streamInSigma :: Sigma s -> [s] -> Either [String] [s]
+-- streamInSigma :: Sigma s -> [s] -> Either [String] [s]
 
---eval :: Automata q s -> [s] -> Either String Bool
+eval :: (Ord q, Ord s) => Delta q s -> q -> Set.Set q -> [s] -> Bool
+eval delta q0 qas ss = isAccepting $ foldl ffunction (Set.singleton q0) ss
+    where isAccepting qs = qs `Set.isSubsetOf` qas
+          ffunction qs s = moveStates delta qs (Symbol s)
+
 --simple functions and  delegate error handling
 --have wrapper functions to operate over automata
 --dumb implementation, no partial matching; valid only whole stream is valid.

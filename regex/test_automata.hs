@@ -44,4 +44,23 @@ epsilonClosureTest = TestLabel "epsilonClosure test" test
           delta = (\q s -> if q < 8 then Set.fromList [q, q+1] else Set.empty)
           expected = (Set.empty, Set.fromList [3,4,5,6,7,8])
 
-tests = TestList [buildSigmaTests, unionAndApplyOverDiffTest, deltaOverSetTest, epsilonClosureTest]
+evalTest = TestLabel "eval DFA test" test
+    where test = TestCase $ assertEqual "" expected $ f delta q0 qas ss
+          f = eval
+          q0 = 1
+          qas = Set.singleton 3
+          ss = "abbbc"
+          expected = True
+          delta q s = case (q, s) of 
+                           (1, Symbol 'a') -> Set.singleton 1
+                           (1, Symbol 'b') -> Set.singleton 2
+                           (1, Symbol 'c') -> Set.singleton 1
+                           (2, Symbol 'a') -> Set.singleton 1 
+                           (2, Symbol 'b') -> Set.singleton 2 
+                           (2, Symbol 'c') -> Set.singleton 3 
+                           (3, Symbol 'a') -> Set.singleton 1 
+                           (3, Symbol 'b') -> Set.singleton 1 
+                           (3, Symbol 'c') -> Set.singleton 1 
+                           (_, Epsilon) -> Set.empty
+
+tests = TestList [buildSigmaTests, unionAndApplyOverDiffTest, deltaOverSetTest, epsilonClosureTest, evalTest]
