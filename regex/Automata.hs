@@ -49,27 +49,24 @@ epsilonClosure delta states visited
      | otherwise = uncurry (epsilonClosure delta) $ swap $ unionAndApplyOverDiff delta' states visited
      where delta' = deltaOverSet delta Epsilon
 
---operations with set that i've had to do
---build set from result of applying function over foldable
---iterate over set
 
-
+epsilonClosure' :: (Ord q) => Delta q s -> Set.Set q -> Set.Set q
+epsilonClosure' delta qs = snd $ epsilonClosure delta qs Set.empty
 
 -- |If state is in return true if state is accepting else false
---isAccepting :: [q] -> q -> Bool
---isAccepting qs q = q elem qs
+-- isAccepting :: Set.Set q -> q -> Bool
 
---stateEpsilonClosure :: Delta s t -> s -> [s]
---stateEpsilonClosure delta s = epsilonClosure delta [s]
-
-
---move :: Delta s t -> s -> SigmaElem t -> [s]
---move delta st sy = let ss = delta st sy in
-                       --ss ++ epsilonClosure delta ss
+stateEpsilonClosure :: (Ord q) => Delta q s -> q -> Set.Set q
+stateEpsilonClosure delta q = epsilonClosure' delta $ Set.singleton q
 
 
---moveStates :: Delta s t -> [s] -> SigmaElem t -> [s]
---moveStates delta ss sy = concat $ map (\s -> move delta s sy) ss
+move :: (Ord q) => Delta q s -> q -> SigmaElem s -> Set.Set q
+move delta q s = deltaOverSet delta s $ epsilonClosure' delta $ Set.singleton q
+
+
+moveStates :: (Ord q) => Delta q s -> Set.Set q -> SigmaElem s -> Set.Set q
+moveStates delta qs s = foldl (\acc s -> Set.union s acc) Set.empty states
+    where states = map (\q -> move delta q s) $ Set.toList qs
 
 
 -- |Validate elements of stream are in Sigma, return either with error message or stream
